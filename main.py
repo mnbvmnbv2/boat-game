@@ -59,17 +59,14 @@ def update(grid: np.ndarray) -> np.ndarray:
         free_under_right = 1 - grid[under_right]
         free_under_left = 1 - grid[under_left]
         if free_under[idx]:
-            print(1)
             grid[occupied[0][idx], occupied[1][idx]] = 0
             grid[under[0][idx], under[1][idx]] = 1
             continue
         if free_under_right[idx]:
-            print(2)
             grid[occupied[0][idx], occupied[1][idx]] = 0
             grid[under_right[0][idx], under_right[1][idx]] = 1
             continue
         if free_under_left[idx]:
-            print(3)
             grid[occupied[0][idx], occupied[1][idx]] = 0
             grid[under_left[0][idx], under_left[1][idx]] = 1
             continue
@@ -105,7 +102,6 @@ def main():
 
         draw(mc, gs)
         gs.grid = update(gs.grid)
-        print(gs.grid)
 
 
 def draw(mc: View, gs: GameState) -> None:
