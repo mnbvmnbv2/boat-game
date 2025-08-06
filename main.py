@@ -13,13 +13,18 @@ WIDTH = 48
 HEIGHT = 36
 WINDOW_SIZE = WIDTH * SCALE, HEIGHT * SCALE
 
-FRAME_RATE_UPDATE = 20  # input in ms
+FRAME_RATE_UPDATE = 10  # input in ms
+FPS = 1000 // FRAME_RATE_UPDATE
+
+G = 360.0
 
 
 class Color:
     WHITE = (255, 255, 255)
     GRAY = (128, 128, 128)
     RED = (255, 0, 0)
+    GREEN = (0, 255, 0)
+    BLUE = (0, 0, 255)
     BLACK = (0, 0, 0)
 
 
@@ -32,11 +37,27 @@ class View:
 
 
 @dataclass
+class Drop:
+    x: float
+    y: float
+    radius: float
+    x_vel: float = 0.0
+    y_vel: float = 0.0
+    color: tuple[int, int, int] = Color.RED
+
+
+@dataclass
 class GameState:
     grid: np.ndarray
+    drops: list[Drop]
 
 
-def update(grid: np.ndarray) -> np.ndarray:
+def coord_flip(x: float, y: float) -> tuple[float, float]:
+    y = WINDOW_SIZE[1] - y
+    return x, y
+
+
+def sand_update(grid: np.ndarray) -> np.ndarray:
     occupied = np.where(grid)
     h, w = np.shape(grid)
 
@@ -74,6 +95,25 @@ def update(grid: np.ndarray) -> np.ndarray:
     return grid
 
 
+def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
+    # add accelleration
+    for drop in drops:
+        drop.y_vel -= G * (time_delta / 1000)
+
+    # move position
+    for drop in drops:
+        new_x = drop.x + drop.x_vel * (time_delta / 1000)
+        new_y = drop.y + drop.y_vel * (time_delta / 1000)
+        if new_x + drop.radius >= WINDOW_SIZE[0] or new_x - drop.radius < 0:
+            drop.x_vel = -drop.x_vel
+        if new_y + drop.radius >= WINDOW_SIZE[1] or new_y - drop.radius < 0:
+            drop.y_vel = -drop.y_vel
+        drop.x += drop.x_vel * (time_delta / 1000)
+        drop.y += drop.y_vel * (time_delta / 1000)
+
+    return drops
+
+
 def main():
     mc = View(
         pygame.display.set_mode(WINDOW_SIZE),
@@ -81,7 +121,16 @@ def main():
         pygame.time.Clock(),
         0,
     )
-    gs = GameState(np.random.randint(0, 2, (HEIGHT, WIDTH)))
+
+    gs = GameState(
+        # grid=np.random.randint(0, 2, (HEIGHT, WIDTH)),
+        grid=np.zeros((HEIGHT, WIDTH)),
+        drops=[
+            Drop(250, 100, 8, x_vel=44),
+            Drop(450, 190, 12, x_vel=-12),
+            Drop(100, 270, 19, x_vel=88, color=Color.BLUE),
+        ],
+    )
     # print(gs.grid)
     pygame.display.set_caption("Boat Game")
 
@@ -101,7 +150,8 @@ def main():
         mc.game_surface.fill(Color.WHITE)
 
         draw(mc, gs)
-        gs.grid = update(gs.grid)
+        gs.grid = sand_update(gs.grid)
+        gs.drops = drop_update(gs.drops, time_delta)
 
 
 def draw(mc: View, gs: GameState) -> None:
@@ -113,6 +163,12 @@ def draw(mc: View, gs: GameState) -> None:
         pygame.draw.rect(mc.game_surface, Color.GRAY, (x, y, 1, 1))
 
     scaled_surface = pygame.transform.scale(mc.game_surface, WINDOW_SIZE)
+
+    for drop in gs.drops:
+        pygame.draw.circle(
+            scaled_surface, drop.color, coord_flip(drop.x, drop.y), drop.radius
+        )
+
     mc.screen.blit(scaled_surface, (0, 0))
 
     pygame.display.flip()
