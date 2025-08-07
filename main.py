@@ -1,4 +1,7 @@
 import sys
+import random
+from math import sqrt
+
 from dataclasses import dataclass
 
 import numpy as np
@@ -13,7 +16,7 @@ WIDTH = 48
 HEIGHT = 36
 WINDOW_SIZE = WIDTH * SCALE, HEIGHT * SCALE
 
-FRAME_RATE_UPDATE = 10  # input in ms
+FRAME_RATE_UPDATE = 5  # input in ms
 FPS = 1000 // FRAME_RATE_UPDATE
 
 G = 360.0
@@ -26,6 +29,11 @@ class Color:
     GREEN = (0, 255, 0)
     BLUE = (0, 0, 255)
     BLACK = (0, 0, 0)
+
+
+COLORS = {k: v for k, v in vars(Color).items() if isinstance(v, tuple)}
+del COLORS["WHITE"]
+print(list(COLORS.values()))
 
 
 @dataclass
@@ -101,9 +109,19 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
         drop.y_vel -= G * (time_delta / 1000)
 
     # move position
-    for drop in drops:
+    for idx, drop in enumerate(drops):
         new_x = drop.x + drop.x_vel * (time_delta / 1000)
         new_y = drop.y + drop.y_vel * (time_delta / 1000)
+        for other_idx, other_drop in enumerate(drops):
+            if idx == other_idx:
+                continue
+            if sqrt((new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2) <= (
+                drop.radius + other_drop.radius
+            ):
+                drop.x_vel = -drop.x_vel
+                drop.y_vel = -drop.y_vel
+                break
+
         if new_x + drop.radius >= WINDOW_SIZE[0] or new_x - drop.radius < 0:
             drop.x_vel = -drop.x_vel
         if new_y + drop.radius >= WINDOW_SIZE[1] or new_y - drop.radius < 0:
@@ -122,14 +140,27 @@ def main():
         0,
     )
 
+    drops = []
+    for i in range(12):
+        drops.append(
+            Drop(
+                random.randint(0, 600),
+                random.randint(0, 400),
+                random.randint(3, 20),
+                x_vel=random.randint(-100, 100),
+                color=random.choice(list(COLORS.values())),
+            )
+        )
+
     gs = GameState(
         # grid=np.random.randint(0, 2, (HEIGHT, WIDTH)),
         grid=np.zeros((HEIGHT, WIDTH)),
-        drops=[
-            Drop(250, 100, 8, x_vel=44),
-            Drop(450, 190, 12, x_vel=-12),
-            Drop(100, 270, 19, x_vel=88, color=Color.BLUE),
-        ],
+        # drops=[
+        #     Drop(250, 100, 8, x_vel=44),
+        #     Drop(450, 190, 12, x_vel=-12),
+        #     Drop(100, 270, 19, x_vel=88, color=Color.BLUE),
+        # ],
+        drops=drops,
     )
     # print(gs.grid)
     pygame.display.set_caption("Boat Game")
