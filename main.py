@@ -56,51 +56,12 @@ class Drop:
 
 @dataclass
 class GameState:
-    grid: np.ndarray
     drops: list[Drop]
 
 
 def coord_flip(x: float, y: float) -> tuple[float, float]:
     y = WINDOW_SIZE[1] - y
     return x, y
-
-
-def sand_update(grid: np.ndarray) -> np.ndarray:
-    occupied = np.where(grid)
-    h, w = np.shape(grid)
-
-    under = (
-        np.clip(occupied[0] + 1, a_min=0, a_max=h - 1),
-        np.clip(occupied[1], a_min=0, a_max=w - 1),
-    )
-    under_right = (
-        np.clip(occupied[0] + 1, a_min=0, a_max=h - 1),
-        np.clip(occupied[1] + 1, a_min=0, a_max=w - 1),
-    )
-    under_left = (
-        np.clip(occupied[0] + 1, a_min=0, a_max=h - 1),
-        np.clip(occupied[1] - 1, a_min=0, a_max=w - 1),
-    )
-
-    for idx in range(len(occupied[0])):
-        # These should be references, calculated once.
-        free_under = 1 - grid[under]
-        free_under_right = 1 - grid[under_right]
-        free_under_left = 1 - grid[under_left]
-        if free_under[idx]:
-            grid[occupied[0][idx], occupied[1][idx]] = 0
-            grid[under[0][idx], under[1][idx]] = 1
-            continue
-        if free_under_right[idx]:
-            grid[occupied[0][idx], occupied[1][idx]] = 0
-            grid[under_right[0][idx], under_right[1][idx]] = 1
-            continue
-        if free_under_left[idx]:
-            grid[occupied[0][idx], occupied[1][idx]] = 0
-            grid[under_left[0][idx], under_left[1][idx]] = 1
-            continue
-
-    return grid
 
 
 def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
@@ -153,16 +114,8 @@ def main():
         )
 
     gs = GameState(
-        # grid=np.random.randint(0, 2, (HEIGHT, WIDTH)),
-        grid=np.zeros((HEIGHT, WIDTH)),
-        # drops=[
-        #     Drop(250, 100, 8, x_vel=44),
-        #     Drop(450, 190, 12, x_vel=-12),
-        #     Drop(100, 270, 19, x_vel=88, color=Color.BLUE),
-        # ],
         drops=drops,
     )
-    # print(gs.grid)
     pygame.display.set_caption("Boat Game")
 
     # Main game loop
@@ -181,18 +134,10 @@ def main():
         mc.game_surface.fill(Color.WHITE)
 
         draw(mc, gs)
-        gs.grid = sand_update(gs.grid)
         gs.drops = drop_update(gs.drops, time_delta)
 
 
 def draw(mc: View, gs: GameState) -> None:
-    # background
-    occupied = np.where(gs.grid)
-    for idx in range(len(occupied[0])):
-        y = occupied[0][idx]
-        x = occupied[1][idx]
-        pygame.draw.rect(mc.game_surface, Color.GRAY, (x, y, 1, 1))
-
     scaled_surface = pygame.transform.scale(mc.game_surface, WINDOW_SIZE)
 
     for drop in gs.drops:
