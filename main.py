@@ -76,17 +76,22 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
         for other_idx, other_drop in enumerate(drops):
             if idx == other_idx:
                 continue
-            if sqrt((new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2) <= (
-                drop.radius + other_drop.radius
-            ):
+            center_distance = sqrt((new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2)
+            if center_distance <= (drop.radius + other_drop.radius):
                 drop.x_vel = -drop.x_vel
                 drop.y_vel = -drop.y_vel
                 break
 
-        if new_x + drop.radius >= WINDOW_SIZE[0] or new_x - drop.radius < 0:
-            drop.x_vel = -drop.x_vel
-        if new_y + drop.radius >= WINDOW_SIZE[1] or new_y - drop.radius < 0:
-            drop.y_vel = -drop.y_vel
+        out_right = new_x + drop.radius >= WINDOW_SIZE[0]
+        out_left = new_x - drop.radius < 0
+        if out_right or out_left:
+            drop.x_vel = 0
+            drop.x = max(drop.radius, min(WINDOW_SIZE[0] - drop.radius, new_x))
+        out_top = new_y - drop.radius < 0
+        out_bottom = new_y + drop.radius >= WINDOW_SIZE[1]
+        if out_bottom or out_top:
+            drop.y_vel = 0
+            drop.y = max(drop.radius, min(WINDOW_SIZE[1] - drop.radius, new_y))
         drop.x += drop.x_vel * (time_delta / 1000)
         drop.y += drop.y_vel * (time_delta / 1000)
 
