@@ -21,6 +21,8 @@ FPS = 1000 // FRAME_RATE_UPDATE
 
 G = 360.0
 
+NUM_DROPS = 250
+
 
 class Color:
     WHITE = (255, 255, 255)
@@ -78,8 +80,8 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
                 continue
             center_distance = sqrt((new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2)
             if center_distance <= (drop.radius + other_drop.radius):
-                drop.x_vel = -drop.x_vel
-                drop.y_vel = -drop.y_vel
+                drop.x_vel = -drop.x_vel / 2
+                drop.y_vel = -drop.y_vel / 2
                 break
 
         out_right = new_x + drop.radius >= WINDOW_SIZE[0]
@@ -107,12 +109,12 @@ def main():
     )
 
     drops = []
-    for i in range(12):
+    for i in range(NUM_DROPS):
         drops.append(
             Drop(
-                random.randint(0, 600),
-                random.randint(0, 400),
-                random.randint(3, 20),
+                random.randint(0, WINDOW_SIZE[0]),
+                random.randint(0, WINDOW_SIZE[1]),
+                random.randint(2, 6),
                 x_vel=random.randint(-100, 100),
                 color=random.choice(list(COLORS.values())),
             )
