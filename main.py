@@ -21,7 +21,7 @@ FPS = 1000 // FRAME_RATE_UPDATE
 
 G = 360.0
 
-NUM_DROPS = 250
+NUM_DROPS = 500
 
 
 class Color:
@@ -35,7 +35,6 @@ class Color:
 
 COLORS = {k: v for k, v in vars(Color).items() if isinstance(v, tuple)}
 del COLORS["WHITE"]
-print(list(COLORS.values()))
 
 
 @dataclass
@@ -114,7 +113,7 @@ def main():
             Drop(
                 random.randint(0, WINDOW_SIZE[0]),
                 random.randint(0, WINDOW_SIZE[1]),
-                random.randint(2, 6),
+                random.randint(1, 4),
                 x_vel=random.randint(-100, 100),
                 color=random.choice(list(COLORS.values())),
             )
@@ -142,6 +141,10 @@ def main():
 
         draw(mc, gs)
         gs.drops = drop_update(gs.drops, time_delta)
+
+        # write fps on screen
+        fps = int(mc.clock.get_fps())
+        pygame.display.set_caption(f"Boat Game - FPS: {fps}")
 
 
 def draw(mc: View, gs: GameState) -> None:
