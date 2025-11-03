@@ -152,14 +152,14 @@ def draw(mc: View, gs: GameState, map_: dict) -> None:
 
     for (cx, cy), drops in map_.items():
         alpha = int(255 * len(drops) / max_count)
-        color = (*Color.BLUE, alpha)
+        color = (*Color.BLUE, min(255, alpha * 2))
         coord = (cx, HEIGHT - cy - 1)
         mc.game_surface.set_at(coord, color)
     scaled_surface = pygame.transform.scale(mc.game_surface, WINDOW_SIZE)
-    for drop in gs.drops:
-        pygame.draw.circle(
-            scaled_surface, (*Color.GREEN, 255), coord_flip(drop.x, drop.y), drop.radius
-        )
+    # for drop in gs.drops:
+    #     pygame.draw.circle(
+    #         scaled_surface, (*Color.GREEN, 255), coord_flip(drop.x, drop.y), drop.radius
+    #     )
 
     mc.screen.fill(Color.WHITE)  # to clear alpha stuff
     mc.screen.blit(scaled_surface, (0, 0))
