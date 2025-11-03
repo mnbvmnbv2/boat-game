@@ -21,7 +21,7 @@ FPS = 1000 // FRAME_RATE_UPDATE
 
 G = 360.0
 
-NUM_DROPS = 2000
+NUM_DROPS = 4000
 
 
 class Color:
@@ -85,6 +85,13 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
                 if center_distance <= (drop.radius + other_drop.radius):
                     drop.x_vel = -drop.x_vel / 2
                     drop.y_vel = -drop.y_vel / 2
+                    # move drops slightly apart
+                    overlap = (drop.radius + other_drop.radius) - center_distance
+                    if center_distance != 0:
+                        move_x = (overlap * (new_x - other_drop.x)) / center_distance
+                        move_y = (overlap * (new_y - other_drop.y)) / center_distance
+                    drop.x += move_x
+                    drop.y += move_y
                     break
 
             out_right = new_x + drop.radius >= WINDOW_SIZE[0]
@@ -115,7 +122,7 @@ def main():
         Drop(
             random.randint(0, WINDOW_SIZE[0]),
             random.randint(0, WINDOW_SIZE[1]),
-            random.randint(1, 2),
+            random.randint(3, 5),
             x_vel=random.randint(-100, 100),
         )
         for _ in range(NUM_DROPS)
@@ -148,11 +155,9 @@ def main():
 def draw(mc: View, gs: GameState, map_: dict) -> None:
     mc.game_surface.fill((*Color.WHITE, 255))
 
-    max_count = max((len(d) for d in map_.values()), default=1)
-
     for (cx, cy), drops in map_.items():
-        alpha = int(255 * len(drops) / max_count)
-        color = (*Color.BLUE, min(255, alpha * 2))
+        alpha = int(255 * len(drops) / 7)
+        color = (*Color.BLUE, min(255, alpha))
         coord = (cx, HEIGHT - cy - 1)
         mc.game_surface.set_at(coord, color)
     scaled_surface = pygame.transform.scale(mc.game_surface, WINDOW_SIZE)
