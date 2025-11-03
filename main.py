@@ -4,7 +4,6 @@ from math import sqrt
 
 from dataclasses import dataclass
 
-import numpy as np
 import pygame
 
 # Screen dimensions
@@ -33,10 +32,6 @@ class Color:
     BLACK = (0, 0, 0)
 
 
-COLORS = {k: v for k, v in vars(Color).items() if isinstance(v, tuple)}
-del COLORS["WHITE"]
-
-
 @dataclass
 class View:
     screen: pygame.Surface
@@ -52,7 +47,6 @@ class Drop:
     radius: float
     x_vel: float = 0.0
     y_vel: float = 0.0
-    color: tuple[int, int, int] = Color.RED
 
 
 @dataclass
@@ -77,7 +71,9 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
         for other_idx, other_drop in enumerate(drops):
             if idx == other_idx:
                 continue
-            center_distance = sqrt((new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2)
+            center_distance = sqrt(
+                (new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2
+            )
             if center_distance <= (drop.radius + other_drop.radius):
                 drop.x_vel = -drop.x_vel / 2
                 drop.y_vel = -drop.y_vel / 2
@@ -107,21 +103,17 @@ def main():
         0,
     )
 
-    drops = []
-    for i in range(NUM_DROPS):
-        drops.append(
-            Drop(
-                random.randint(0, WINDOW_SIZE[0]),
-                random.randint(0, WINDOW_SIZE[1]),
-                random.randint(1, 4),
-                x_vel=random.randint(-100, 100),
-                color=random.choice(list(COLORS.values())),
-            )
+    drops = [
+        Drop(
+            random.randint(0, WINDOW_SIZE[0]),
+            random.randint(0, WINDOW_SIZE[1]),
+            random.randint(1, 4),
+            x_vel=random.randint(-100, 100),
         )
+        for _ in range(NUM_DROPS)
+    ]
 
-    gs = GameState(
-        drops=drops,
-    )
+    gs = GameState(drops=drops)
     pygame.display.set_caption("Boat Game")
 
     # Main game loop
@@ -152,7 +144,7 @@ def draw(mc: View, gs: GameState) -> None:
 
     for drop in gs.drops:
         pygame.draw.circle(
-            scaled_surface, drop.color, coord_flip(drop.x, drop.y), drop.radius
+            scaled_surface, Color.BLUE, coord_flip(drop.x, drop.y), drop.radius
         )
 
     mc.screen.blit(scaled_surface, (0, 0))
