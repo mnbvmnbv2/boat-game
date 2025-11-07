@@ -76,6 +76,20 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
         for idx, drop in enumerate(drops_region):
             new_x = drop.x + drop.x_vel * (time_delta / 1000)
             new_y = drop.y + drop.y_vel * (time_delta / 1000)
+
+            out_right = new_x + drop.radius >= WINDOW_SIZE[0]
+            out_left = new_x - drop.radius < 0
+            if out_right or out_left:
+                drop.x_vel = 0
+                new_x = max(drop.radius, min(WINDOW_SIZE[0] - drop.radius, new_x))
+            out_top = new_y - drop.radius < 0
+            out_bottom = new_y + drop.radius >= WINDOW_SIZE[1]
+            if out_bottom or out_top:
+                drop.y_vel = 0
+                new_y = max(drop.radius, min(WINDOW_SIZE[1] - drop.radius, new_y))
+            drop.x = new_x
+            drop.y = new_y
+
             for other_idx, other_drop in enumerate(drops_region):
                 if idx == other_idx:
                     continue
@@ -94,19 +108,6 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
                     other_drop.x_vel += x_component
                     other_drop.y_vel += y_component
                     break
-
-            out_right = new_x + drop.radius >= WINDOW_SIZE[0]
-            out_left = new_x - drop.radius < 0
-            if out_right or out_left:
-                drop.x_vel = 0
-                drop.x = max(drop.radius, min(WINDOW_SIZE[0] - drop.radius, new_x))
-            out_top = new_y - drop.radius < 0
-            out_bottom = new_y + drop.radius >= WINDOW_SIZE[1]
-            if out_bottom or out_top:
-                drop.y_vel = 0
-                drop.y = max(drop.radius, min(WINDOW_SIZE[1] - drop.radius, new_y))
-            drop.x += drop.x_vel * (time_delta / 1000)
-            drop.y += drop.y_vel * (time_delta / 1000)
 
     return [drop for drops in map_.values() for drop in drops], map_
 
