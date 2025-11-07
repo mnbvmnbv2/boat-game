@@ -20,6 +20,7 @@ FRAME_RATE_UPDATE = 5  # input in ms
 FPS = 1000 // FRAME_RATE_UPDATE
 
 G = 360.0
+REPULSIVE_FORCE = 2.0
 
 NUM_DROPS = 1000
 
@@ -103,10 +104,10 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
                     y_diff = new_y - other_drop.y
                     x_component = (other_drop.radius - x_diff) / other_drop.radius
                     y_component = (other_drop.radius - y_diff) / other_drop.radius
-                    drop.x_vel += -x_component
-                    drop.y_vel += -y_component
-                    other_drop.x_vel += x_component
-                    other_drop.y_vel += y_component
+                    drop.x_vel += -x_component * REPULSIVE_FORCE
+                    drop.y_vel += -y_component * REPULSIVE_FORCE
+                    other_drop.x_vel += x_component * REPULSIVE_FORCE
+                    other_drop.y_vel += y_component * REPULSIVE_FORCE
                     break
 
     return [drop for drops in map_.values() for drop in drops], map_
