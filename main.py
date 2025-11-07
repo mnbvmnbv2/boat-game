@@ -16,13 +16,16 @@ WIDTH = 48
 HEIGHT = 36
 WINDOW_SIZE = WIDTH * SCALE, HEIGHT * SCALE
 
-FRAME_RATE_UPDATE = 5  # input in ms
+FRAME_RATE_UPDATE = 10  # input in ms
 FPS = 1000 // FRAME_RATE_UPDATE
 
 G = 360.0
-REPULSIVE_FORCE = 2.0
+REPULSIVE_FORCE = 1.0
 
-NUM_DROPS = 1000
+NUM_DROPS = 700
+
+FIXED_DT = 1.0 / 240.0
+MAX_STEPS_PER_FRAME = 8
 
 
 class Color:
@@ -61,10 +64,10 @@ def coord_flip(x: float, y: float) -> tuple[float, float]:
     return x, y
 
 
-def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
+def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
     # add accelleration
     for drop in drops:
-        drop.y_vel -= G * (time_delta / 1000)
+        drop.y_vel -= G * dt
 
     # map drops
     map_: dict[tuple[int, int], list[Drop]] = defaultdict(list)
@@ -75,8 +78,8 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
     # move position
     for drops_region in map_.values():
         for idx, drop in enumerate(drops_region):
-            new_x = drop.x + drop.x_vel * (time_delta / 1000)
-            new_y = drop.y + drop.y_vel * (time_delta / 1000)
+            new_x = drop.x + drop.x_vel * dt
+            new_y = drop.y + drop.y_vel * dt
 
             out_right = new_x + drop.radius >= WINDOW_SIZE[0]
             out_left = new_x - drop.radius < 0
@@ -125,7 +128,7 @@ def main():
         Drop(
             random.randint(0, WINDOW_SIZE[0]),
             random.randint(0, WINDOW_SIZE[1]),
-            random.randint(5, 6),
+            random.randint(20, 22),
             x_vel=random.randint(-100, 100),
         )
         for _ in range(NUM_DROPS)
@@ -134,10 +137,13 @@ def main():
     gs = GameState(drops=drops)
     pygame.display.set_caption("Boat Game")
 
+    accumulator = 0.0
+
     # Main game loop
     while True:
-        time_delta = mc.clock.tick(1000 // FRAME_RATE_UPDATE)
-        mc.current_time += time_delta
+        frame_ms = mc.clock.tick(1000 // FRAME_RATE_UPDATE)
+        dt_sec = frame_ms / 1000.0
+        mc.current_time += frame_ms
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -147,7 +153,16 @@ def main():
                     pygame.quit()
                     sys.exit()
 
-        gs.drops, map_ = drop_update(gs.drops, time_delta)
+        accumulator += dt_sec
+        steps = 0
+        map_ = None
+        while accumulator >= FIXED_DT and steps < MAX_STEPS_PER_FRAME:
+            gs.drops, map_ = drop_update(gs.drops, FIXED_DT)
+            accumulator -= FIXED_DT
+            steps += 1
+
+        if map_ is None:
+            _, map_ = drop_update(gs.drops, 0.0)
         draw(mc, gs, map_)
 
         # write fps on screen
