@@ -21,7 +21,7 @@ FPS = 1000 // FRAME_RATE_UPDATE
 
 G = 360.0
 
-NUM_DROPS = 4000
+NUM_DROPS = 1000
 
 
 class Color:
@@ -155,16 +155,22 @@ def main():
 def draw(mc: View, gs: GameState, map_: dict) -> None:
     mc.game_surface.fill((*Color.WHITE, 255))
 
-    for (cx, cy), drops in map_.items():
-        alpha = int(255 * len(drops) / 7)
-        color = (*Color.BLUE, min(255, alpha))
-        coord = (cx, HEIGHT - cy - 1)
-        mc.game_surface.set_at(coord, color)
+    # for (cx, cy), drops in map_.items():
+    #     alpha = int(255 * len(drops) / 7)
+    #     color = (*Color.BLUE, min(255, alpha))
+    #     coord = (cx, HEIGHT - cy - 1)
+    #     mc.game_surface.set_at(coord, color)
     scaled_surface = pygame.transform.scale(mc.game_surface, WINDOW_SIZE)
-    # for drop in gs.drops:
-    #     pygame.draw.circle(
-    #         scaled_surface, (*Color.GREEN, 255), coord_flip(drop.x, drop.y), drop.radius
-    #     )
+    for drop in gs.drops:
+        pygame.draw.circle(
+            scaled_surface,
+            (*Color.BLUE, 50),
+            coord_flip(drop.x, drop.y),
+            drop.radius,
+        )
+        pygame.draw.circle(
+            scaled_surface, (*Color.BLUE, 255), coord_flip(drop.x, drop.y), 1
+        )
 
     mc.screen.fill(Color.WHITE)  # to clear alpha stuff
     mc.screen.blit(scaled_surface, (0, 0))
