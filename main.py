@@ -66,7 +66,7 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
         drop.y_vel -= G * (time_delta / 1000)
 
     # map drops
-    map_ = defaultdict(list)
+    map_: dict[tuple[int, int], list[Drop]] = defaultdict(list)
     for drop in drops:
         x, y = drop.x // SCALE, drop.y // SCALE
         map_[x, y].append(drop)
@@ -82,16 +82,17 @@ def drop_update(drops: list[Drop], time_delta: int) -> list[Drop]:
                 center_distance = sqrt(
                     (new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2
                 )
-                if center_distance <= (drop.radius + other_drop.radius):
-                    drop.x_vel = -drop.x_vel / 2
-                    drop.y_vel = -drop.y_vel / 2
-                    # move drops slightly apart
-                    overlap = (drop.radius + other_drop.radius) - center_distance
-                    if center_distance != 0:
-                        move_x = (overlap * (new_x - other_drop.x)) / center_distance
-                        move_y = (overlap * (new_y - other_drop.y)) / center_distance
-                    drop.x += move_x
-                    drop.y += move_y
+                if center_distance <= other_drop.radius:
+                    # normalized overlap
+                    # overlap = (other_drop.radius - center_distance) / other_drop.radius
+                    x_diff = new_x - other_drop.x
+                    y_diff = new_y - other_drop.y
+                    x_component = (other_drop.radius - x_diff) / other_drop.radius
+                    y_component = (other_drop.radius - y_diff) / other_drop.radius
+                    drop.x_vel += -x_component
+                    drop.y_vel += -y_component
+                    other_drop.x_vel += x_component
+                    other_drop.y_vel += y_component
                     break
 
             out_right = new_x + drop.radius >= WINDOW_SIZE[0]
@@ -122,7 +123,7 @@ def main():
         Drop(
             random.randint(0, WINDOW_SIZE[0]),
             random.randint(0, WINDOW_SIZE[1]),
-            random.randint(3, 5),
+            random.randint(5, 6),
             x_vel=random.randint(-100, 100),
         )
         for _ in range(NUM_DROPS)
@@ -163,10 +164,7 @@ def draw(mc: View, gs: GameState, map_: dict) -> None:
     scaled_surface = pygame.transform.scale(mc.game_surface, WINDOW_SIZE)
     for drop in gs.drops:
         pygame.draw.circle(
-            scaled_surface,
-            (*Color.BLUE, 50),
-            coord_flip(drop.x, drop.y),
-            drop.radius,
+            scaled_surface, (*Color.BLUE, 50), coord_flip(drop.x, drop.y), drop.radius
         )
         pygame.draw.circle(
             scaled_surface, (*Color.BLUE, 255), coord_flip(drop.x, drop.y), 1
