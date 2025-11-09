@@ -79,10 +79,6 @@ def resolve_collision(a: Drop, b: Drop) -> None:
 
 
 def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
-    # add accelleration
-    for drop in drops:
-        drop.y_vel -= G * dt
-
     # map drops
     map_: dict[tuple[int, int], list[int]] = defaultdict(list)
     for i, drop in enumerate(drops):
@@ -96,6 +92,7 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
         random.shuffle(drops_region)
         for drop_idx in drops_region:
             drop = drops[drop_idx]
+            drop.y_vel -= G * dt
             new_x = drop.x + drop.x_vel * dt
             new_y = drop.y + drop.y_vel * dt
             if new_x + RADIUS >= WINDOW_SIZE[0] or new_x - RADIUS < 0:
