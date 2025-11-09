@@ -65,21 +65,28 @@ def coord_flip(x: float, y: float) -> tuple[float, float]:
     return x, y
 
 
+def resolve_collision():
+    pass
+
+
 def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
     # add accelleration
     for drop in drops:
         drop.y_vel -= G * dt
 
     # map drops
-    map_: dict[tuple[int, int], list[Drop]] = defaultdict(list)
-    for drop in drops:
+    map_: dict[tuple[int, int], list[int]] = defaultdict(list)
+    for i, drop in enumerate(drops):
         x, y = drop.x // SCALE, drop.y // SCALE
-        map_[x, y].append(drop)
+        map_[x, y].append(i)
+
+    resolved = set()
 
     # move position
     for drops_region in map_.values():
         random.shuffle(drops_region)
-        for idx, drop in enumerate(drops_region):
+        for drop_idx in drops_region:
+            drop = drops[drop_idx]
             new_x = drop.x + drop.x_vel * dt
             new_y = drop.y + drop.y_vel * dt
 
@@ -97,9 +104,13 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
             drop.y = new_y
 
             # neighbour region
-            for other_idx, other_drop in enumerate(drops_region):
-                if idx == other_idx:
+            for other_idx in drops_region:
+                if drop_idx == other_idx:
                     continue
+                if (min(drop_idx, other_idx), max(drop_idx, other_idx)) in resolved:
+                    continue
+                resolved.add((min(drop_idx, other_idx), max(drop_idx, other_idx)))
+                other_drop = drops[other_idx]
                 center_distance = sqrt(
                     (new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2
                 )
@@ -115,7 +126,7 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
                     other_drop.x_vel += x_component * REPULSIVE_FORCE
                     other_drop.y_vel += y_component * REPULSIVE_FORCE
 
-    return [drop for drops in map_.values() for drop in drops], map_
+    return drops, map_
 
 
 def main():
