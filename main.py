@@ -22,12 +22,24 @@ FPS = 1000 // FRAME_RATE_UPDATE
 G = 360.0
 REPULSIVE_FORCE = 1.0
 
-NUM_DROPS = 1000
+NUM_DROPS = 500
 
 FIXED_DT = 1.0 / 240.0
 MAX_STEPS_PER_FRAME = 8
 
 RADIUS = 10
+
+NEIGHBOR_OFFSETS = [
+    (-1, -1),
+    (-1, 0),
+    (-1, 1),
+    (0, -1),
+    (0, 0),
+    (0, 1),
+    (1, -1),
+    (1, 0),
+    (1, 1),
+]
 
 
 class Color:
@@ -103,8 +115,14 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
                 new_y = max(RADIUS, min(WINDOW_SIZE[1] - RADIUS, new_y))
             drop.x, drop.y = new_x, new_y
 
+            coor_x, coor_y = drop.x // SCALE, drop.y // SCALE
+            neighboring_drops = [
+                d
+                for o in NEIGHBOR_OFFSETS
+                for d in (map_.get((coor_x + o[0], coor_y + o[1]), []))
+            ]
             # neighbour region
-            for other_idx in region:
+            for other_idx in neighboring_drops:
                 if drop_idx <= other_idx:
                     continue
                 resolve_collision(drop, drops[other_idx])
