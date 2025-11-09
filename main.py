@@ -65,8 +65,19 @@ def coord_flip(x: float, y: float) -> tuple[float, float]:
     return x, y
 
 
-def resolve_collision():
-    pass
+def resolve_collision(a: Drop, b: Drop) -> None:
+    center_distance = sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
+    if center_distance <= RADIUS:
+        # normalized overlap
+        # overlap = (RADIUS - center_distance) / RADIUS
+        x_diff = a.x - b.x
+        y_diff = a.y - b.y
+        x_component = (RADIUS - x_diff) / RADIUS
+        y_component = (RADIUS - y_diff) / RADIUS
+        a.x_vel += -x_component * REPULSIVE_FORCE
+        a.y_vel += -y_component * REPULSIVE_FORCE
+        b.x_vel += x_component * REPULSIVE_FORCE
+        b.y_vel += y_component * REPULSIVE_FORCE
 
 
 def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
@@ -111,20 +122,7 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
                     continue
                 resolved.add((min(drop_idx, other_idx), max(drop_idx, other_idx)))
                 other_drop = drops[other_idx]
-                center_distance = sqrt(
-                    (new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2
-                )
-                if center_distance <= RADIUS:
-                    # normalized overlap
-                    # overlap = (RADIUS - center_distance) / RADIUS
-                    x_diff = new_x - other_drop.x
-                    y_diff = new_y - other_drop.y
-                    x_component = (RADIUS - x_diff) / RADIUS
-                    y_component = (RADIUS - y_diff) / RADIUS
-                    drop.x_vel += -x_component * REPULSIVE_FORCE
-                    drop.y_vel += -y_component * REPULSIVE_FORCE
-                    other_drop.x_vel += x_component * REPULSIVE_FORCE
-                    other_drop.y_vel += y_component * REPULSIVE_FORCE
+                resolve_collision(drop, other_drop)
 
     return drops, map_
 
