@@ -11,9 +11,9 @@ import pygame
 pygame.init()
 
 info = pygame.display.Info()
-SCALE = 20
-WIDTH = 48
-HEIGHT = 36
+SCALE = 10
+WIDTH = 48 * 2
+HEIGHT = 36 * 2
 WINDOW_SIZE = WIDTH * SCALE, HEIGHT * SCALE
 
 FRAME_RATE_UPDATE = 10  # input in ms
@@ -22,7 +22,7 @@ FPS = 1000 // FRAME_RATE_UPDATE
 G = 360.0
 REPULSIVE_FORCE = 1.0
 
-NUM_DROPS = 500
+NUM_DROPS = 1000
 
 FIXED_DT = 1.0 / 240.0
 MAX_STEPS_PER_FRAME = 8
@@ -86,14 +86,11 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
     # map drops
     map_: dict[tuple[int, int], list[int]] = defaultdict(list)
     for i, drop in enumerate(drops):
-        x, y = drop.x // SCALE, drop.y // SCALE
-        map_[x, y].append(i)
-
-    resolved = set()
+        map_[drop.x // SCALE, drop.y // SCALE].append(i)
 
     # move position
-    for drops_region in map_.values():
-        for drop_idx in drops_region:
+    for region in map_.values():
+        for drop_idx in region:
             drop = drops[drop_idx]
             drop.y_vel -= G * dt
             new_x = drop.x + drop.x_vel * dt
@@ -107,12 +104,9 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
             drop.x, drop.y = new_x, new_y
 
             # neighbour region
-            for other_idx in drops_region:
+            for other_idx in region:
                 if drop_idx <= other_idx:
                     continue
-                if (min(drop_idx, other_idx), max(drop_idx, other_idx)) in resolved:
-                    continue
-                resolved.add((min(drop_idx, other_idx), max(drop_idx, other_idx)))
                 resolve_collision(drop, drops[other_idx])
 
     return drops, map_
