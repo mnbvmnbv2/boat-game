@@ -75,9 +75,14 @@ def resolve_collision(a: Drop, b: Drop) -> None:
         a.y_vel += -y_component * REPULSIVE_FORCE
         b.x_vel += x_component * REPULSIVE_FORCE
         b.y_vel += y_component * REPULSIVE_FORCE
+        a.x += -x_component * 0.9
+        a.y += -y_component * 0.9
+        b.x += x_component * 0.9
+        b.y += y_component * 0.9
 
 
 def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
+    random.shuffle(drops)
     # map drops
     map_: dict[tuple[int, int], list[int]] = defaultdict(list)
     for i, drop in enumerate(drops):
@@ -88,7 +93,6 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
 
     # move position
     for drops_region in map_.values():
-        random.shuffle(drops_region)
         for drop_idx in drops_region:
             drop = drops[drop_idx]
             drop.y_vel -= G * dt
