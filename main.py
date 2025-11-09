@@ -66,8 +66,7 @@ def coord_flip(x: float, y: float) -> tuple[float, float]:
 
 
 def resolve_collision(a: Drop, b: Drop) -> None:
-    center_distance = sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
-    if center_distance <= RADIUS:
+    if sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2) <= RADIUS:
         x_diff = a.x - b.x
         y_diff = a.y - b.y
         x_component = (RADIUS - x_diff) / RADIUS
@@ -105,7 +104,7 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
 
             # neighbour region
             for other_idx in drops_region:
-                if drop_idx == other_idx:
+                if drop_idx <= other_idx:
                     continue
                 if (min(drop_idx, other_idx), max(drop_idx, other_idx)) in resolved:
                     continue
