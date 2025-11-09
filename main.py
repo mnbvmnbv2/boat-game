@@ -100,19 +100,13 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
             drop = drops[drop_idx]
             new_x = drop.x + drop.x_vel * dt
             new_y = drop.y + drop.y_vel * dt
-
-            out_right = new_x + RADIUS >= WINDOW_SIZE[0]
-            out_left = new_x - RADIUS < 0
-            if out_right or out_left:
+            if new_x + RADIUS >= WINDOW_SIZE[0] or new_x - RADIUS < 0:
                 drop.x_vel = -drop.x_vel * 0.05
                 new_x = max(RADIUS, min(WINDOW_SIZE[0] - RADIUS, new_x))
-            out_top = new_y - RADIUS < 0
-            out_bottom = new_y + RADIUS >= WINDOW_SIZE[1]
-            if out_bottom or out_top:
+            if new_y + RADIUS >= WINDOW_SIZE[1] or new_y - RADIUS < 0:
                 drop.y_vel = -drop.y_vel * 0.05
                 new_y = max(RADIUS, min(WINDOW_SIZE[1] - RADIUS, new_y))
-            drop.x = new_x
-            drop.y = new_y
+            drop.x, drop.y = new_x, new_y
 
             # neighbour region
             for other_idx in drops_region:
@@ -121,8 +115,7 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
                 if (min(drop_idx, other_idx), max(drop_idx, other_idx)) in resolved:
                     continue
                 resolved.add((min(drop_idx, other_idx), max(drop_idx, other_idx)))
-                other_drop = drops[other_idx]
-                resolve_collision(drop, other_drop)
+                resolve_collision(drop, drops[other_idx])
 
     return drops, map_
 
