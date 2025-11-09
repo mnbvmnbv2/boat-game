@@ -27,6 +27,8 @@ NUM_DROPS = 500
 FIXED_DT = 1.0 / 240.0
 MAX_STEPS_PER_FRAME = 8
 
+RADIUS = 10
+
 
 class Color:
     WHITE = (255, 255, 255)
@@ -49,7 +51,6 @@ class View:
 class Drop:
     x: float
     y: float
-    radius: float
     x_vel: float = 0.0
     y_vel: float = 0.0
 
@@ -82,32 +83,33 @@ def drop_update(drops: list[Drop], dt: float) -> list[Drop]:
             new_x = drop.x + drop.x_vel * dt
             new_y = drop.y + drop.y_vel * dt
 
-            out_right = new_x + drop.radius >= WINDOW_SIZE[0]
-            out_left = new_x - drop.radius < 0
+            out_right = new_x + RADIUS >= WINDOW_SIZE[0]
+            out_left = new_x - RADIUS < 0
             if out_right or out_left:
                 drop.x_vel = -drop.x_vel * 0.05
-                new_x = max(drop.radius, min(WINDOW_SIZE[0] - drop.radius, new_x))
-            out_top = new_y - drop.radius < 0
-            out_bottom = new_y + drop.radius >= WINDOW_SIZE[1]
+                new_x = max(RADIUS, min(WINDOW_SIZE[0] - RADIUS, new_x))
+            out_top = new_y - RADIUS < 0
+            out_bottom = new_y + RADIUS >= WINDOW_SIZE[1]
             if out_bottom or out_top:
                 drop.y_vel = -drop.y_vel * 0.05
-                new_y = max(drop.radius, min(WINDOW_SIZE[1] - drop.radius, new_y))
+                new_y = max(RADIUS, min(WINDOW_SIZE[1] - RADIUS, new_y))
             drop.x = new_x
             drop.y = new_y
 
+            # neighbour region
             for other_idx, other_drop in enumerate(drops_region):
                 if idx == other_idx:
                     continue
                 center_distance = sqrt(
                     (new_x - other_drop.x) ** 2 + (new_y - other_drop.y) ** 2
                 )
-                if center_distance <= other_drop.radius:
+                if center_distance <= RADIUS:
                     # normalized overlap
-                    # overlap = (other_drop.radius - center_distance) / other_drop.radius
+                    # overlap = (RADIUS - center_distance) / RADIUS
                     x_diff = new_x - other_drop.x
                     y_diff = new_y - other_drop.y
-                    x_component = (other_drop.radius - x_diff) / other_drop.radius
-                    y_component = (other_drop.radius - y_diff) / other_drop.radius
+                    x_component = (RADIUS - x_diff) / RADIUS
+                    y_component = (RADIUS - y_diff) / RADIUS
                     drop.x_vel += -x_component * REPULSIVE_FORCE
                     drop.y_vel += -y_component * REPULSIVE_FORCE
                     other_drop.x_vel += x_component * REPULSIVE_FORCE
@@ -128,7 +130,6 @@ def main():
         Drop(
             random.randint(0, WINDOW_SIZE[0]),
             random.randint(0, WINDOW_SIZE[1]),
-            random.randint(10, 12),
             x_vel=random.randint(-100, 100),
         )
         for _ in range(NUM_DROPS)
@@ -181,7 +182,7 @@ def draw(mc: View, gs: GameState, map_: dict) -> None:
     scaled_surface = pygame.transform.scale(mc.game_surface, WINDOW_SIZE)
     for drop in gs.drops:
         pygame.draw.circle(
-            scaled_surface, (*Color.BLUE, 50), coord_flip(drop.x, drop.y), drop.radius
+            scaled_surface, (*Color.BLUE, 50), coord_flip(drop.x, drop.y), RADIUS
         )
         pygame.draw.circle(
             scaled_surface, (*Color.BLUE, 255), coord_flip(drop.x, drop.y), 1
