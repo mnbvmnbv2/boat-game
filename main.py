@@ -68,8 +68,6 @@ def coord_flip(x: float, y: float) -> tuple[float, float]:
 def resolve_collision(a: Drop, b: Drop) -> None:
     center_distance = sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2)
     if center_distance <= RADIUS:
-        # normalized overlap
-        # overlap = (RADIUS - center_distance) / RADIUS
         x_diff = a.x - b.x
         y_diff = a.y - b.y
         x_component = (RADIUS - x_diff) / RADIUS
